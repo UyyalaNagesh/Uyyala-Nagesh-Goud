@@ -1,0 +1,31 @@
+import hashlib
+import pandas as pd
+
+def generate_hash(url):
+  hash = hashlib.sha1()
+  hash.update(url.encode())
+  return hash.hexdigest()
+
+def shorten_url(url):
+  hash = generate_hash(url)
+  
+  df = pd.read_csv('urls.csv')
+  
+  if hash in df['hash'].values:
+    shortened_url = df[df['hash'] == hash]['shortened_url'].values[0]
+  else:
+    shortened_url = f"http://short.com/{hash}"
+    df = df.append({'original_url': url, 'hash': hash, 'shortened_url': shortened_url}, ignore_index=True)
+    df.to_csv('urls.csv', index=False)
+  return shortened_url
+
+def expand_url(short_url):
+  hash = short_url.split('/')[-1]
+  
+  df = pd.read_csv('urls.csv')
+  
+  if hash in df['hash'].values:
+    original_url = df[df['hash'] == hash]['original_url'].values[0]
+    return original_url
+  else:
+    return "URL not found"
